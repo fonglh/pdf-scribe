@@ -19,6 +19,7 @@
        Fabric.js doesn't know where to draw. -->
     <canvas id="c" style="border:1px solid black;" ></canvas>
     <button id="clear-canvas">Clear</button>
+    <button id="save-canvas">Save</button>
     <img src="ratio-2.svg" id="ratio-2">
 </body>
  
@@ -51,10 +52,17 @@
   
     // Attach it to the canvas object, then (re)display
     // the canvas.  
-    add_svg(canvas, imgInstance);
+//    add_svg(canvas, imgInstance);
     
     var clearEl = document.getElementById('clear-canvas');
     clearEl.onclick = function() { canvas.clear(); add_svg(canvas, imgInstance); };
+
+    var saveEl = document.getElementById('save-canvas');
+    saveEl.onclick = function() { console.log(JSON.stringify(canvas)); };
+
+    canvas.on('path:created', function(e) {
+     console.log(JSON.stringify(canvas));
+    });
   });
 
 </script>
