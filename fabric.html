@@ -10,8 +10,16 @@
   <!-- Get the highest 1.X version of jQuery from CDN. Required for ready() function. -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script> 
   <style>
-    #ratio-2 {
+    #ratio-1 {
       display: none;
+    }
+
+    #path-rep {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 90%;
+      width: 50%;
     }
   </style>
 </head>
@@ -21,8 +29,9 @@
        Fabric.js doesn't know where to draw. -->
     <canvas id="c" style="border:1px solid black;" ></canvas>
     <button id="clear-canvas">Clear</button>
-    <button id="save-canvas">Save</button>
-    <img src="ratio-2.svg" id="ratio-2">
+    <button id="load-canvas">Load</button>
+    <img src="ratio-1.svg" id="ratio-1">
+    <textarea id="path-rep"></textarea>
 </body>
  
 <script>
@@ -33,37 +42,65 @@
   // Run only when HTML is loaded and 
   // DOM properly initialized (courtesy jquery)
   $(function () {
+    //helper function to add image to canvas and force render
     function add_svg(canvas, img) {
       canvas.add(img);
       canvas.centerObject(img);
       canvas.renderAll();
     }
 
+    //load hardcoded SVG file path from text file on web server
+    function load_file() {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "path.txt", false);
+      xhr.send(null);
+      return xhr.responseText;
+    }
+
     // Obtain a canvas drawing surface from fabric.js
     var canvas = new fabric.Canvas('c');
     canvas.isDrawingMode = true;
 
-    var imgElement = document.getElementById('ratio-2');
+    var imgElement = document.getElementById('ratio-1');
     var imgInstance = new fabric.Image(imgElement, {
       opacity: 1,
       scaleX: 1.0,
       scaleY: 1.0
     });
+
+    // set dimensions for canvas based on input file
     canvas.setHeight(imgInstance.height * imgInstance.scaleX);
     canvas.setWidth(imgInstance.width * imgInstance.scaleY);
-  
-    // Attach it to the canvas object, then (re)display
+
+    // Attach imgInstance to the canvas object, then (re)display
     // the canvas.  
-//    add_svg(canvas, imgInstance);
+    add_svg(canvas, imgInstance);
     
+    //click event handler for clear button
+    //canvas.clear() removes everything, so the background SVG has to be added back
     var clearEl = document.getElementById('clear-canvas');
     clearEl.onclick = function() { canvas.clear(); add_svg(canvas, imgInstance); };
 
-    var saveEl = document.getElementById('save-canvas');
-    saveEl.onclick = function() { console.log(JSON.stringify(canvas)); };
+    //for demo purposes, load a path from a file
+    var loadEl = document.getElementById('load-canvas');
+    loadEl.onclick = function() {
+        var path = load_file();
+        canvas.loadFromJSON(path);  //this wipes the canvas
+        add_svg(canvas, imgInstance);
+      };
 
+    //subscribe to path:created event and write JSON representation of
+    //the path to the textarea
     canvas.on('path:created', function(e) {
      console.log(JSON.stringify(canvas));
+
+     //only want to save the scribble
+     canvas.remove(imgInstance);
+     //set textarea value to the string rep of the path
+     document.getElementById('path-rep').value = JSON.stringify(canvas);
+
+     //add the background svg back
+     canvas.add(imgInstance);
     });
   });
 
